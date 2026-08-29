@@ -6,9 +6,11 @@ import { Suspense } from 'react';
 import CyberGlobe from './component/CyberGlobe';
 import SeamlessMapView from './component/SeamlessMapView';
 
-const BACKEND_URL = (typeof window !== 'undefined' && window.location.hostname)
-  ? `http://${window.location.hostname}:4000`
-  : 'http://localhost:4000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (
+  (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost')
+    ? `http://${window.location.hostname}:4000`
+    : 'http://localhost:4000'
+);
 
 const previewAttacks = [
   { id: 'preview-1', source_ip: '185.42.18.7', source_lat: 28.61, source_long: 77.21, attack_type: 'DDoS', severity: 0.5 },
