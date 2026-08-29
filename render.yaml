@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: cyber-threat-soc-backend
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: node backend/server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
+      - key: AUTO_STREAM
+        value: "true"
