@@ -175,6 +175,11 @@ io.on('connection', (socket) => {
         console.log(`[Manual Trigger Alert] ${threat.attack_type} from ${threat.source_ip} (${city.name}) - Action: trigger_camera_zoom`);
     });
 
+    socket.on('disconnect', () => {
+        console.log('Frontend Client Disconnected:', socket.id);
+    });
+});
+
 // Root status endpoint for Render Health Checks
 app.get('/', (req, res) => {
     res.json({
