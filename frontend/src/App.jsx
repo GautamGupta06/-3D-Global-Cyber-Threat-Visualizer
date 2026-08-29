@@ -7,8 +7,8 @@ import CyberGlobe from './component/CyberGlobe';
 import SeamlessMapView from './component/SeamlessMapView';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (
-  (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost')
-    ? `http://${window.location.hostname}:4000`
+  (typeof window !== 'undefined' && window.location.hostname && (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'))
+    ? 'https://3d-global-cyber-threat-visualizer.onrender.com'
     : 'http://localhost:4000'
 );
 
