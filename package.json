@@ -1,0 +1,17 @@
+{
+  "name": "3d-global-cyber-threat-visualizer",
+  "version": "1.0.0",
+  "description": "3D Cyber Threat Intelligence SOC Visualizer with PyTorch NIDS and Concept Drift Detection",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "build": "cd backend && npm install",
+    "frontend:build": "cd frontend && npm install && npm run build"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "kafkajs": "^2.2.4",
+    "socket.io": "^4.8.3"
+  }
+}
