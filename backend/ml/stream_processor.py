@@ -454,8 +454,13 @@ def main():
                     "severity": threat_analysis["severity_score"],
                     "drift_score": threat_analysis["drift_score"],
                     "reconstruction_error": threat_analysis["reconstruction_error"],
+                    "adaptive_threshold": threat_analysis.get("adaptive_threshold", 0.12),
+                    "ewma_loss": threat_analysis.get("ewma_loss", 0.04),
+                    "ml_confidence": threat_analysis.get("ml_confidence", 0.92),
+                    "feature_attributions": threat_analysis.get("feature_attributions", []),
                     "severity_level": threat_analysis["severity"],
-                    "action": threat_analysis["action"]
+                    "action": threat_analysis["action"],
+                    "city": threat_analysis.get("city", "External Host")
                 }
                 session.post(BACKEND_API, json=payload, timeout=0.8)
             except Exception:

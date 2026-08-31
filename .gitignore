@@ -31,3 +31,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+
+# SQLite Database storage
+*.db
+*.db-wal
+*.db-shm
+backend/data/
