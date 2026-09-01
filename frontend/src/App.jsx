@@ -259,9 +259,8 @@ function App() {
         playThreatAlertChime(true);
       }
 
-      // Auto-focus if manual trigger
+      // Alert notification if manual trigger
       if (data.isManualTrigger) {
-        setSelectedThreat(threatObj);
         showToast(`⚡ High-Priority Alert: ${threatObj.attack_type} from ${threatObj.source_ip}`);
       }
     });
@@ -297,7 +296,7 @@ function App() {
   }, []);
 
   const handleSelectThreat = useCallback((threat) => {
-    setSelectedThreat(threat);
+    setSelectedThreat(prev => (prev?.id === threat.id ? null : threat));
   }, []);
 
   const handleFlyToLocation = useCallback((threat) => {
@@ -484,7 +483,6 @@ function App() {
               autoRotate={autoRotate}
               mapMode={mapMode}
               selectedThreat={selectedThreat}
-              onSelectThreat={handleSelectThreat}
             />
             <Preload all />
           </Suspense>
@@ -694,7 +692,9 @@ function App() {
         onPause={() => setIsPlaying(false)}
         onSeek={(idx) => {
           setPlaybackIndex(idx);
-          if (playbackEvents[idx]) setSelectedThreat(playbackEvents[idx]);
+          if (selectedThreat && playbackEvents[idx]) {
+            setSelectedThreat(playbackEvents[idx]);
+          }
         }}
         onStepForward={() => {
           setPlaybackIndex(idx => Math.min(playbackEvents.length - 1, idx + 1));
