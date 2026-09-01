@@ -498,6 +498,8 @@ function App() {
           attacks={filteredAttacks}
           onZoomOut={handleZoomOutToGlobe}
           onZoomChange={setMapZoomLevel}
+          onSelectThreat={handleSelectThreat}
+          selectedThreat={selectedThreat}
         />
       )}
 
