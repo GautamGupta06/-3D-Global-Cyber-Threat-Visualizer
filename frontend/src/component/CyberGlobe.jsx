@@ -111,9 +111,8 @@ function CityLabel({ city, zoomDist, camera }) {
   );
 }
 
-function ThreatArc({ attack, startLat, startLng, endLat, endLng, color = '#ff174f', isCritical = false, isSelected = false, onSelect }) {
+function ThreatArc({ attack, startLat, startLng, endLat, endLng, color = '#ff174f', isCritical = false, isSelected = false }) {
   const laserRef = useRef();
-  const [hovered, setHovered] = useState(false);
 
   const { curve, lineObject } = useMemo(() => {
     const p1 = new THREE.Vector3(...getCoordinates(startLat, startLng, 2.015));
@@ -129,14 +128,14 @@ function ThreatArc({ attack, startLat, startLng, endLat, endLng, color = '#ff174
     const pts = c.getPoints(36);
     const geom = new THREE.BufferGeometry().setFromPoints(pts);
     const mat = new THREE.LineBasicMaterial({
-      color: isSelected ? '#00ffff' : (hovered ? '#ffffff' : color),
+      color: isSelected ? '#00ffff' : color,
       transparent: true,
-      opacity: isSelected ? 1.0 : (hovered ? 0.9 : (isCritical ? 0.75 : 0.45)),
+      opacity: isSelected ? 1.0 : (isCritical ? 0.75 : 0.45),
       linewidth: isSelected ? 3 : 1,
     });
     const line = new THREE.Line(geom, mat);
     return { curve: c, lineObject: line };
-  }, [startLat, startLng, endLat, endLng, color, isCritical, isSelected, hovered]);
+  }, [startLat, startLng, endLat, endLng, color, isCritical, isSelected]);
 
   useFrame(({ clock }) => {
     if (laserRef.current) {
@@ -148,21 +147,7 @@ function ThreatArc({ attack, startLat, startLng, endLat, endLng, color = '#ff174
   });
 
   return (
-    <group
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect?.(attack);
-      }}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = 'pointer';
-      }}
-      onPointerOut={() => {
-        setHovered(false);
-        document.body.style.cursor = 'default';
-      }}
-    >
+    <group>
       <primitive object={lineObject} />
       <mesh ref={laserRef}>
         <sphereGeometry args={[isSelected ? 0.045 : (isCritical ? 0.032 : 0.022), 12, 12]} />
@@ -172,9 +157,8 @@ function ThreatArc({ attack, startLat, startLng, endLat, endLng, color = '#ff174
   );
 }
 
-function AttackMarker({ attack, zoomDist, isSelected = false, onSelect }) {
+function AttackMarker({ attack, zoomDist, isSelected = false }) {
   const pulseRef = useRef();
-  const [hovered, setHovered] = useState(false);
   const lat = Number(attack.source_lat);
   const lng = Number(attack.source_long);
   const severity = Number(attack.severity) || 0;
@@ -183,7 +167,7 @@ function AttackMarker({ attack, zoomDist, isSelected = false, onSelect }) {
   const color = isSelected ? '#00ffff' : (isCritical ? '#ff174f' : '#ffd166');
 
   // Smooth dynamic marker scaling down to pinpoint size at close surface zoom
-  const markerScale = THREE.MathUtils.clamp((zoomDist - 2.0) * 1.5, 0.08, 1.0) * (isSelected ? 1.4 : (hovered ? 1.25 : 1.0));
+  const markerScale = THREE.MathUtils.clamp((zoomDist - 2.0) * 1.5, 0.08, 1.0) * (isSelected ? 1.4 : 1.0);
 
   useFrame(({ clock }) => {
     if (pulseRef.current) {
@@ -195,23 +179,7 @@ function AttackMarker({ attack, zoomDist, isSelected = false, onSelect }) {
   });
 
   return (
-    <group
-      position={position}
-      scale={markerScale}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect?.(attack);
-      }}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = 'pointer';
-      }}
-      onPointerOut={() => {
-        setHovered(false);
-        document.body.style.cursor = 'default';
-      }}
-    >
+    <group position={position} scale={markerScale}>
       <mesh ref={pulseRef}>
         <ringGeometry args={[isCritical ? 0.055 : 0.038, isCritical ? 0.075 : 0.052, 24]} />
         <meshBasicMaterial color={color} transparent opacity={0.7} side={THREE.DoubleSide} depthWrite={false} />
@@ -239,7 +207,6 @@ export default function CyberGlobe({
   autoRotate = false,
   mapMode = 'Satellite',
   selectedThreat = null,
-  onSelectThreat = null,
 }) {
   const globeRef = useRef();
   const isInteractingRef = useRef(false);
@@ -361,7 +328,6 @@ export default function CyberGlobe({
           color={Number(arc.severity) > 0.5 ? '#ff174f' : '#ffd166'}
           isCritical={Number(arc.severity) > 0.5}
           isSelected={selectedThreat?.id === arc.id}
-          onSelect={onSelectThreat}
         />
       ))}
 
@@ -376,7 +342,6 @@ export default function CyberGlobe({
             attack={attack}
             zoomDist={zoomDist}
             isSelected={selectedThreat?.id === attack.id}
-            onSelect={onSelectThreat}
           />
         );
       })}
