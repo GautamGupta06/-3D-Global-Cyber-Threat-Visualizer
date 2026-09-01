@@ -9,6 +9,7 @@ import ThreatDetailDrawer from './component/ThreatDetailDrawer';
 import ThreatFilterBar from './component/ThreatFilterBar';
 import PlaybackControlBar from './component/PlaybackControlBar';
 import SOCStatsModal from './component/SOCStatsModal';
+import ProjectGuideModal from './component/ProjectGuideModal';
 import { getMitreDetails, getSeverityInfo } from './utils/mitreMapping';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (
@@ -58,6 +59,36 @@ function App() {
   const [blockedIps, setBlockedIps] = useState(new Set());
   const [toastMessage, setToastMessage] = useState(null);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
+
+  // Global Keyboard Shortcuts (Press ? or H to toggle System Guide)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT')) {
+        return;
+      }
+      if (e.key === '?' || e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        setGuideOpen(prev => !prev);
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        setIsPaused(prev => !prev);
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        setSoundEnabled(prev => {
+          const next = !prev;
+          if (next) playThreatAlertChime(false);
+          return next;
+        });
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        setAutoRotate(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   // Playback & Historical State
   const [isPlaybackMode, setIsPlaybackMode] = useState(false);
@@ -364,6 +395,65 @@ function App() {
         criticalCount={criticalCount}
       />
 
+      {/* ─── Top-Right: Complete System Guide & Architecture Manual Button ─── */}
+      <div style={{
+        position: 'absolute',
+        top: 20,
+        right: 20,
+        zIndex: 30,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        pointerEvents: 'auto',
+      }}>
+        <button
+          onClick={() => setGuideOpen(true)}
+          style={{
+            fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+            fontSize: '11px',
+            fontWeight: 'bold',
+            letterSpacing: '0.06em',
+            padding: '9px 16px',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, rgba(0, 255, 204, 0.18) 0%, rgba(56, 189, 248, 0.22) 100%)',
+            border: '1px solid #00ffcc',
+            color: '#00ffcc',
+            backdropFilter: 'blur(14px)',
+            boxShadow: '0 0 25px rgba(0, 255, 204, 0.25), 0 4px 18px rgba(0,0,0,0.6)',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+            e.currentTarget.style.boxShadow = '0 0 35px rgba(0, 255, 204, 0.6), 0 8px 25px rgba(0,0,0,0.7)';
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 255, 204, 0.35) 0%, rgba(56, 189, 248, 0.35) 100%)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+            e.currentTarget.style.boxShadow = '0 0 25px rgba(0, 255, 204, 0.25), 0 4px 18px rgba(0,0,0,0.6)';
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 255, 204, 0.18) 0%, rgba(56, 189, 248, 0.22) 100%)';
+          }}
+          title="Open Complete Project Guide, Button Directory & Architecture Documentation (Shortcut: ? or H)"
+        >
+          <span style={{ fontSize: '14px', filter: 'drop-shadow(0 0 6px #00ffcc)' }}>📘</span>
+          <span>SYSTEM GUIDE</span>
+          <span style={{
+            fontSize: '9px',
+            background: 'rgba(0, 255, 204, 0.2)',
+            border: '1px solid rgba(0, 255, 204, 0.5)',
+            padding: '1px 5px',
+            borderRadius: '4px',
+            color: '#ffffff',
+            fontWeight: 'bold'
+          }}>
+            ?
+          </span>
+        </button>
+      </div>
+
       {/* ─── 3D Earth Globe (Space / Orbit / Continental) ─── */}
       {!mapViewState.active && (
         <Canvas
@@ -637,6 +727,12 @@ function App() {
         isOpen={statsOpen}
         onClose={() => setStatsOpen(false)}
         backendUrl={BACKEND_URL}
+      />
+
+      {/* ─── Complete Project Guide & Operational Architecture Modal ─── */}
+      <ProjectGuideModal
+        isOpen={guideOpen}
+        onClose={() => setGuideOpen(false)}
       />
 
       {/* ─── Active SOC Toast Notifications ─── */}
