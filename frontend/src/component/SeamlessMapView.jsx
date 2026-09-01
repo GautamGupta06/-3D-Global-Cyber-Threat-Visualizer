@@ -46,6 +46,8 @@ export default function SeamlessMapView({
   attacks = [],
   onZoomOut,
   onZoomChange,
+  onSelectThreat,
+  selectedThreat = null,
 }) {
   const activeTile = TILE_LAYERS[mapMode] || TILE_LAYERS.Satellite;
 
@@ -67,15 +69,16 @@ export default function SeamlessMapView({
           color: #00ffcc !important;
         }
         .custom-popup .leaflet-popup-content-wrapper {
-          background: rgba(2, 6, 23, 0.92) !important;
+          background: rgba(2, 6, 23, 0.95) !important;
           border: 1px solid #00ffcc !important;
-          border-radius: 8px !important;
+          border-radius: 10px !important;
           color: #fff !important;
-          font-family: monospace !important;
-          box-shadow: 0 0 15px rgba(0, 255, 204, 0.3) !important;
+          font-family: 'JetBrains Mono', monospace !important;
+          box-shadow: 0 0 20px rgba(0, 255, 204, 0.35) !important;
+          padding: 4px !important;
         }
         .custom-popup .leaflet-popup-tip {
-          background: rgba(2, 6, 23, 0.92) !important;
+          background: rgba(2, 6, 23, 0.95) !important;
           border: 1px solid #00ffcc !important;
         }
       `}</style>
@@ -105,29 +108,65 @@ export default function SeamlessMapView({
           const lng = Number(attack.source_long);
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
 
-          const color = ATTACK_COLOR[attack.attack_type] || '#00ffcc';
+          const isSelected = selectedThreat?.id === attack.id || (selectedThreat?.source_ip === attack.source_ip && selectedThreat?.timestamp === attack.timestamp);
+          const color = isSelected ? '#00ffff' : (ATTACK_COLOR[attack.attack_type] || '#00ffcc');
 
           return (
             <CircleMarker
               key={attack.id || `${attack.source_ip}-${i}`}
               center={[lat, lng]}
-              radius={attack.attack_type === 'DDoS' ? 12 : 8}
+              radius={isSelected ? 16 : (attack.attack_type === 'DDoS' ? 12 : 8)}
               pathOptions={{
-                color: color,
+                color: isSelected ? '#00ffff' : color,
                 fillColor: color,
-                fillOpacity: 0.6,
-                weight: 2,
+                fillOpacity: isSelected ? 0.9 : 0.65,
+                weight: isSelected ? 3 : 2,
               }}
               className="custom-popup"
+              eventHandlers={{
+                click: () => {
+                  onSelectThreat?.(attack);
+                },
+              }}
             >
               <Popup>
-                <div style={{ fontSize: '11px', lineHeight: 1.4 }}>
-                  <div style={{ color, fontWeight: 'bold', fontSize: '12px', marginBottom: 2 }}>
-                    ⚠ [{attack.attack_type || 'THREAT'}]
+                <div style={{ fontSize: '11px', lineHeight: 1.45, padding: '2px 4px' }}>
+                  <div style={{ color: isSelected ? '#00ffff' : color, fontWeight: 'bold', fontSize: '12px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>⚠</span>
+                    <span>[{attack.attack_type?.replace(/_/g, ' ') || 'THREAT'}]</span>
                   </div>
-                  <div>IP: <span style={{ color: '#00ffcc' }}>{attack.source_ip}</span></div>
-                  <div>Lat/Lng: {lat.toFixed(3)}°, {lng.toFixed(3)}°</div>
-                  {attack.severity && <div>Severity: {(attack.severity * 100).toFixed(0)}%</div>}
+                  <div>IP: <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>{attack.source_ip}</span></div>
+                  <div>Location: {attack.city || `${lat.toFixed(3)}°, ${lng.toFixed(3)}°`}</div>
+                  {attack.severity && <div>Severity: <strong style={{ color: Number(attack.severity) > 0.5 ? '#ff174f' : '#ffd166' }}>{(Number(attack.severity) * 100).toFixed(0)}%</strong></div>}
+                  {attack.drift_score !== undefined && <div>Concept Drift: <strong>{(Number(attack.drift_score) * 100).toFixed(0)}%</strong></div>}
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectThreat?.(attack);
+                    }}
+                    style={{
+                      marginTop: '8px',
+                      width: '100%',
+                      background: 'rgba(0, 255, 204, 0.22)',
+                      border: '1px solid #00ffcc',
+                      color: '#00ffcc',
+                      padding: '5px 8px',
+                      borderRadius: '6px',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span>🔬</span>
+                    <span>INSPECT IN DASHBOARD ➔</span>
+                  </button>
                 </div>
               </Popup>
             </CircleMarker>
