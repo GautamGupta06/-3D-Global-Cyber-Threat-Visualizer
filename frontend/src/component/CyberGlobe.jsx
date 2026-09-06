@@ -22,26 +22,41 @@ const getCoordinates = (lat, long, radius = 2) => {
 };
 
 const majorCities = [
-  { name: 'New York', lat: 40.71, lng: -74.01 },
-  { name: 'London', lat: 51.51, lng: -0.12 },
-  { name: 'Tokyo', lat: 35.68, lng: 139.69 },
-  { name: 'Paris', lat: 48.85, lng: 2.35 },
-  { name: 'Sydney', lat: -33.87, lng: 151.21 },
-  { name: 'Beijing', lat: 39.9, lng: 116.4 },
-  { name: 'Mumbai', lat: 19.08, lng: 72.88 },
-  { name: 'Cairo', lat: 30.04, lng: 31.24 },
-  { name: 'São Paulo', lat: -23.55, lng: -46.63 },
-  { name: 'Moscow', lat: 55.75, lng: 37.62 },
-  { name: 'Los Angeles', lat: 34.05, lng: -118.24 },
-  { name: 'Dubai', lat: 25.2, lng: 55.27 },
-  { name: 'Singapore', lat: 1.35, lng: 103.82 },
-  { name: 'Berlin', lat: 52.52, lng: 13.4 },
-  { name: 'Toronto', lat: 43.65, lng: -79.38 },
-  { name: 'Bangkok', lat: 13.75, lng: 100.5 },
-  { name: 'Lagos', lat: 6.52, lng: 3.38 },
-  { name: 'Buenos Aires', lat: -34.6, lng: -58.38 },
-  { name: 'New Delhi', lat: 28.61, lng: 77.21 },
-  { name: 'Shanghai', lat: 31.23, lng: 121.47 },
+  // Tier 1: Primary Continental Hubs (visible at standard orbit)
+  { name: 'New York', lat: 40.71, lng: -74.01, tier: 1 },
+  { name: 'London', lat: 51.51, lng: -0.12, tier: 1 },
+  { name: 'Tokyo', lat: 35.68, lng: 139.69, tier: 1 },
+  { name: 'Paris', lat: 48.85, lng: 2.35, tier: 1 },
+  { name: 'Sydney', lat: -33.87, lng: 151.21, tier: 1 },
+  { name: 'São Paulo', lat: -23.55, lng: -46.63, tier: 1 },
+  { name: 'Dubai', lat: 25.20, lng: 55.27, tier: 1 },
+  { name: 'Singapore', lat: 1.35, lng: 103.82, tier: 1 },
+  { name: 'New Delhi', lat: 28.61, lng: 77.21, tier: 1 },
+  { name: 'Cairo', lat: 30.04, lng: 31.24, tier: 1 },
+  { name: 'Johannesburg', lat: -26.20, lng: 28.05, tier: 1 },
+  { name: 'Seoul', lat: 37.56, lng: 126.98, tier: 1 },
+  { name: 'Los Angeles', lat: 34.05, lng: -118.24, tier: 1 },
+  { name: 'Frankfurt', lat: 50.11, lng: 8.68, tier: 1 },
+
+  // Tier 2: Secondary Hubs (only visible when zooming in closer)
+  { name: 'San Francisco', lat: 37.77, lng: -122.42, tier: 2 },
+  { name: 'Chicago', lat: 41.88, lng: -87.63, tier: 2 },
+  { name: 'Toronto', lat: 43.65, lng: -79.38, tier: 2 },
+  { name: 'Mexico City', lat: 19.43, lng: -99.13, tier: 2 },
+  { name: 'Buenos Aires', lat: -34.60, lng: -58.38, tier: 2 },
+  { name: 'Santiago', lat: -33.45, lng: -70.67, tier: 2 },
+  { name: 'Berlin', lat: 52.52, lng: 13.40, tier: 2 },
+  { name: 'Stockholm', lat: 59.33, lng: 18.07, tier: 2 },
+  { name: 'Beijing', lat: 39.90, lng: 116.40, tier: 2 },
+  { name: 'Shanghai', lat: 31.23, lng: 121.47, tier: 2 },
+  { name: 'Hong Kong', lat: 22.32, lng: 114.17, tier: 2 },
+  { name: 'Mumbai', lat: 19.08, lng: 72.88, tier: 2 },
+  { name: 'Bengaluru', lat: 12.97, lng: 77.59, tier: 2 },
+  { name: 'Bangkok', lat: 13.75, lng: 100.50, tier: 2 },
+  { name: 'Jakarta', lat: -6.21, lng: 106.85, tier: 2 },
+  { name: 'Melbourne', lat: -37.81, lng: 144.96, tier: 2 },
+  { name: 'Nairobi', lat: -1.29, lng: 36.82, tier: 2 },
+  { name: 'Lagos', lat: 6.52, lng: 3.38, tier: 2 }
 ];
 
 function EarthMesh({ mapMode, textures }) {
@@ -79,30 +94,46 @@ function EarthMesh({ mapMode, textures }) {
   );
 }
 
-function CityLabel({ city, zoomDist, camera }) {
+function CityLabel({ city, zoomDist, camera, isHidden = false }) {
+  if (isHidden) return null;
   const pos = getCoordinates(city.lat, city.lng, 2.02);
-  const cityVec = new THREE.Vector3(...pos);
-  const camVec = camera.position.clone();
+  const cityVec = new THREE.Vector3(...pos).normalize();
+  const camVec = camera.position.clone().normalize();
   const dot = cityVec.dot(camVec);
-  if (dot < 0.2) return null;
-  if (zoomDist > 5.2) return null;
 
-  const scale = Math.max(8, Math.min(12, (zoomDist - 2.0) * 12 + 6));
+  // Stricter camera angle cutoff: only show cities facing towards the viewer
+  if (dot < 0.45) return null;
+  // Don't show labels when zoomed out too far away
+  if (zoomDist > 4.8) return null;
+  // Tier 2 cities only appear when zooming closer to reduce clutter
+  if (city.tier === 2 && zoomDist > 3.6) return null;
+
+  const scale = Math.max(7, Math.min(10, (zoomDist - 2.0) * 6 + 6));
 
   return (
-    <Html position={pos} center style={{ pointerEvents: 'none' }}>
+    <Html
+      position={pos}
+      center
+      zIndexRange={[0, 0]}
+      style={{
+        pointerEvents: 'none',
+        zIndex: 0,
+        opacity: Math.min(1, Math.max(0, (dot - 0.4) * 3)),
+        transition: 'opacity 0.2s ease',
+      }}
+    >
       <div style={{
-        background: 'rgba(2,6,23,0.85)',
-        border: '1px solid rgba(0,255,204,0.6)',
-        borderRadius: '4px',
-        padding: '2px 6px',
+        background: 'rgba(2, 6, 23, 0.82)',
+        border: '1px solid rgba(0, 255, 204, 0.4)',
+        borderRadius: '3px',
+        padding: '1px 5px',
         color: '#00ffcc',
         fontSize: `${scale}px`,
         fontFamily: 'monospace',
         fontWeight: 'bold',
         whiteSpace: 'nowrap',
-        backdropFilter: 'blur(4px)',
-        boxShadow: '0 0 8px rgba(0,255,204,0.3)',
+        backdropFilter: 'blur(3px)',
+        boxShadow: '0 0 5px rgba(0, 255, 204, 0.2)',
         userSelect: 'none',
       }}>
         ● {city.name}
@@ -207,6 +238,7 @@ export default function CyberGlobe({
   autoRotate = false,
   mapMode = 'Satellite',
   selectedThreat = null,
+  hideCityLabels = false,
 }) {
   const globeRef = useRef();
   const isInteractingRef = useRef(false);
@@ -312,8 +344,8 @@ export default function CyberGlobe({
       <Atmosphere zoomLevel={zoomDist} />
 
       {/* Major City Badges */}
-      {majorCities.map((city) => (
-        <CityLabel key={city.name} city={city} zoomDist={zoomDist} camera={camera} />
+      {!hideCityLabels && majorCities.map((city) => (
+        <CityLabel key={city.name} city={city} zoomDist={zoomDist} camera={camera} isHidden={hideCityLabels} />
       ))}
 
       {/* 3D Curved Threat Trajectory Arcs */}

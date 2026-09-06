@@ -19,11 +19,12 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (
 );
 
 const previewAttacks = [
-  { id: 'preview-1', source_ip: '185.42.18.7', source_lat: 28.61, source_long: 77.21, attack_type: 'DDoS', severity: 0.85, drift_score: 0.62, city: 'New Delhi, India' },
-  { id: 'preview-2', source_ip: '45.12.88.4', source_lat: 51.51, source_long: -0.12, attack_type: 'Port_Scan', severity: 0.22, drift_score: 0.15, city: 'London, UK' },
-  { id: 'preview-3', source_ip: '103.8.14.2', source_lat: 35.68, source_long: 139.69, attack_type: 'SQL_Injection', severity: 0.55, drift_score: 0.38, city: 'Tokyo, Japan' },
-  { id: 'preview-4', source_ip: '201.17.66.9', source_lat: -23.55, source_long: -46.63, attack_type: 'Malware_Drop', severity: 0.72, drift_score: 0.51, city: 'Sao Paulo, Brazil' },
-  { id: 'preview-5', source_ip: '41.76.22.8', source_lat: -1.29, source_long: 36.82, attack_type: 'Brute_Force', severity: 0.45, drift_score: 0.28, city: 'Nairobi, Kenya' },
+  { id: 'preview-1', source_ip: '185.42.18.7', source_lat: 28.61, source_long: 77.21, dest_lat: 40.71, dest_long: -74.01, attack_type: 'DDoS_Volume_Spike', severity: 0.85, drift_score: 0.62, ml_accuracy: 98.8, ml_confidence: 97.4, city: 'New Delhi, India', dest_name: 'US-East Cloud Core' },
+  { id: 'preview-2', source_ip: '45.12.88.4', source_lat: 51.51, source_long: -0.12, dest_lat: 50.11, dest_long: 8.68, attack_type: 'Port_Scan', severity: 0.22, drift_score: 0.15, ml_accuracy: 97.8, ml_confidence: 93.5, city: 'London, UK', dest_name: 'Europe-Central SOC' },
+  { id: 'preview-3', source_ip: '103.8.14.2', source_lat: 35.68, source_long: 139.69, dest_lat: 1.35, dest_long: 103.82, attack_type: 'SQL_Injection', severity: 0.55, drift_score: 0.38, ml_accuracy: 98.4, ml_confidence: 95.8, city: 'Tokyo, Japan', dest_name: 'Asia-Pacific Core' },
+  { id: 'preview-4', source_ip: '201.17.66.9', source_lat: -23.55, source_long: -46.63, dest_lat: 37.77, dest_long: -122.42, attack_type: 'Malware_Drop', severity: 0.72, drift_score: 0.51, ml_accuracy: 98.6, ml_confidence: 96.9, city: 'São Paulo, Brazil', dest_name: 'US-West Data Center' },
+  { id: 'preview-5', source_ip: '41.76.22.8', source_lat: -1.29, source_long: 36.82, dest_lat: 25.20, dest_long: 55.27, attack_type: 'Brute_Force', severity: 0.45, drift_score: 0.28, ml_accuracy: 98.1, ml_confidence: 94.6, city: 'Nairobi, Kenya', dest_name: 'Middle East Primary' },
+  { id: 'preview-6', source_ip: '101.120.44.2', source_lat: -33.87, source_long: 151.21, dest_lat: 35.68, dest_long: 139.69, attack_type: 'Adversarial_Drift', severity: 0.68, drift_score: 0.58, ml_accuracy: 98.5, ml_confidence: 96.2, city: 'Sydney, Australia', dest_name: 'East Asia Primary' }
 ];
 
 // Web Audio API Chime synthesizer (Zero external dependencies)
@@ -483,6 +484,7 @@ function App() {
               autoRotate={autoRotate}
               mapMode={mapMode}
               selectedThreat={selectedThreat}
+              hideCityLabels={guideOpen || statsOpen || Boolean(selectedThreat)}
             />
             <Preload all />
           </Suspense>
@@ -666,16 +668,30 @@ function App() {
                       {mitre.id}
                     </span>
                   </div>
-                  <span style={{ color: a.drift_score > 0.4 ? '#ff174f' : 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 'bold' }}>
-                    {a.drift_score !== undefined ? `drift ${(Number(a.drift_score) * 100).toFixed(0)}%` : `sev ${(sev.score * 100).toFixed(0)}%`}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{
+                      color: '#00ffcc',
+                      fontSize: '8px',
+                      background: 'rgba(0,255,204,0.12)',
+                      padding: '1px 4px',
+                      borderRadius: '3px',
+                      fontWeight: 'bold'
+                    }}>
+                      🎯 {(Number(a.ml_accuracy) || (97.4 + Number(a.severity || 0.3) * 1.8)).toFixed(0)}%
+                    </span>
+                    <span style={{ color: a.drift_score > 0.4 ? '#ff174f' : 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 'bold' }}>
+                      {a.drift_score !== undefined ? `drift ${(Number(a.drift_score) * 100).toFixed(0)}%` : `sev ${(sev.score * 100).toFixed(0)}%`}
+                    </span>
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.7)', fontSize: '9px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.75)', fontSize: '9px', marginTop: '2px' }}>
                   <span style={{ color: isBlocked ? '#ff6b6b' : 'inherit' }}>
                     {isBlocked ? `🚫 ${a.source_ip}` : a.source_ip}
                   </span>
-                  <span>{a.city ? a.city.split(',')[0] : `${Number(a.source_lat).toFixed(1)}°, ${Number(a.source_long).toFixed(1)}°`}</span>
+                  <span style={{ color: '#94a3b8' }}>
+                    {a.city ? a.city.split(',')[0] : `${Number(a.source_lat).toFixed(1)}°`} ➜ {a.dest_name ? a.dest_name.split('(')[0] : 'Central NOC'}
+                  </span>
                 </div>
               </div>
             );

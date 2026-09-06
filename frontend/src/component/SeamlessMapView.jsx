@@ -136,7 +136,9 @@ export default function SeamlessMapView({
                     <span>[{attack.attack_type?.replace(/_/g, ' ') || 'THREAT'}]</span>
                   </div>
                   <div>IP: <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>{attack.source_ip}</span></div>
-                  <div>Location: {attack.city || `${lat.toFixed(3)}°, ${lng.toFixed(3)}°`}</div>
+                  <div>Origin: <span style={{ color: '#cbd5e1' }}>{attack.city || `${lat.toFixed(3)}°, ${lng.toFixed(3)}°`}</span></div>
+                  {attack.dest_name && <div>Target: <span style={{ color: '#38bdf8' }}>{attack.dest_name}</span></div>}
+                  {attack.ml_accuracy && <div>AI Accuracy: <strong style={{ color: '#00ffcc' }}>{attack.ml_accuracy}%</strong></div>}
                   {attack.severity && <div>Severity: <strong style={{ color: Number(attack.severity) > 0.5 ? '#ff174f' : '#ffd166' }}>{(Number(attack.severity) * 100).toFixed(0)}%</strong></div>}
                   {attack.drift_score !== undefined && <div>Concept Drift: <strong>{(Number(attack.drift_score) * 100).toFixed(0)}%</strong></div>}
                   
