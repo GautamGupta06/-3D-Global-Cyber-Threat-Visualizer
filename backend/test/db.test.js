@@ -35,7 +35,4 @@ if (!Array.isArray(fbList) || fbList.length === 0) {
   console.error('❌ recordFeedback failed');
   process.exit(1);
 }
-console.log('✓ recordFeedback successful');
-
 console.log('\n✅ All Backend & SQLite Persistence tests passed successfully.');
-process.exit(0);
