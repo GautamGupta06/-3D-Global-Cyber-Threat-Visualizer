@@ -64,7 +64,7 @@ if (db) {
 
   // Safe dynamic migration for existing databases
   try {
-    const columns = db.prepare(`PRAGMA table_info(threats)`).all().map(c => c.name);
+    const columns = db.pragma('table_info(threats)').map(c => c.name);
     const addCol = (col, type) => {
       if (!columns.includes(col)) {
         db.exec(`ALTER TABLE threats ADD COLUMN ${col} ${type}`);
