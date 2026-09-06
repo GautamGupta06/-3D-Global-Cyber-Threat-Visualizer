@@ -43,11 +43,11 @@ jobs:
 
       - name: Install Backend Dependencies
         working-directory: backend
-        run: npm ci
+        run: npm install
 
       - name: Test Database & Persistence Engine
         working-directory: backend
-        run: node -e "const { db, getStats } = require('./db'); console.log('DB Initialized:', getStats());"
+        run: node -e "const { db, getStats } = require('./db'); console.log('DB Initialized:', getStats()); if (db && typeof db.close === 'function') db.close(); process.exit(0);"
 
   ml-pipeline-check:
     name: PyTorch ML Pipeline Check
